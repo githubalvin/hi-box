@@ -7,5 +7,5 @@ class AccountRequest(Request):
     METHOD = REQUSET_GET
     ENDPOINT = "/api/v1/account-overview"
 
-    async def get_account_info(self, currency):
+    async def get_account_overview(self, currency):
         return (await self.get(self.get_url("?currency=%s" % currency)))

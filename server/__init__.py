@@ -20,14 +20,14 @@ async def main_loop():
 
     machine = Machine()
     
-    print(await machine.kumex.get_account_info("XBT"))
+    print(await machine.kumex.get_public_token())
 
     while True:
         try:
             await machine.analysis()
         except Exception:
             pass
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.01)
 
 
 async def main():

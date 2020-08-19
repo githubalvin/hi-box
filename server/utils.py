@@ -14,6 +14,13 @@ def join_url(*path):
     return "".join(path)
 
 
+def check_respond(data):
+    """返回数据检查"""
+    if "msg" in data:
+        raise RuntimeError(data["msg"])
+    return data["data"]
+
+
 if "_SINGLE_OBJ" not in globals():
     _SINGLE_OBJ = {}
 

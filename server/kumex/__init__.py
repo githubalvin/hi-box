@@ -7,8 +7,9 @@ from exchange.base import ExchangeAbstract
 
 from .request.account import AccountRequest
 from .request.time import TimeRequest
+from .request.websocket_token import WebSocketPubTokenRequest
 
-mixin = [AccountRequest, TimeRequest]
+mixin = [AccountRequest, TimeRequest, WebSocketPubTokenRequest]
 
 
 class KuMexExchange(ExchangeAbstract, *mixin):
