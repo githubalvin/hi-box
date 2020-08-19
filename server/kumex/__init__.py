@@ -5,6 +5,8 @@ import hmac
 import time
 import json
 
+import requests
+
 from uuid import uuid1
 from urllib.parse import urljoin
 
@@ -78,13 +80,15 @@ class KuMexExchange(*mixin):
             sign = base64.b64encode(
                 hmac.new(self.api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
             headers = {
-                "KC-API-SIGN": str(sign),
+                "KC-API-SIGN": sign.decode("utf-8"),
                 "KC-API-TIMESTAMP": str(now_time),
                 "KC-API-KEY": self.api_key,
                 "KC-API-PASSPHRASE": self.api_passphrase,
                 "Content-Type": "application/json"
             }
+            print(headers, sign)
         url = urljoin(self.url, uri)
+
         kwargs = {
             "headers": headers,
             "timeout": timeout,
@@ -92,7 +96,7 @@ class KuMexExchange(*mixin):
 
         if method not in ['GET', 'DELETE']:
             kwargs["data"] = data_json
- 
+
         async with self.request.request(method, url, **kwargs) as r:
             return (await self._check_response_data(r))
 
