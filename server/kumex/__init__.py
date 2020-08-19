@@ -104,6 +104,28 @@ class KuMexExchange(*mixin):
         async with self.request.request(method, url, **kwargs) as r:
             return (await self._check_response_data(r))
 
+    def _get_ws_endpoint(self, ws_detail, private=False):
+        if not ws_detail:
+            raise Exception("Websocket details Error")
+        ws_connect_id = str(int(time.time() * 1000))
+        token = ws_detail['token']
+        endpoint = ws_detail['instanceServers'][0]['endpoint']
+        ws_endpoint = f"{endpoint}?token={token}&connectId={ws_connect_id}"
+        if private:
+            ws_endpoint += '&acceptUserMessage=true'
+        return ws_endpoint
+
+    def _get_ws_encryption(self, ws_detail):
+        if not ws_detail:
+            raise Exception("Websocket details Error")
+        return ws_detail['instanceServers'][0]['encrypt']
+
+    def _get_ws_pingtimeout(self, ws_detail):
+        if not ws_detail:
+            raise Exception("Websocket details Error")
+        _timeout = int(ws_detail['instanceServers'][0]['pingTimeout'] / 1000) - 2
+        return _timeout
+
     async def subscribe(self, url):
         """Subscribe
         
@@ -112,7 +134,11 @@ class KuMexExchange(*mixin):
         async with self.request.ws_connect(url) as ws:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-                    if msg.data == 'close cmd':
+                    try:
+                        m = json.loads(msg.data)
+                    except ValueError:
+                           pass
+                    if m == 'close cmd':
                         await ws.close()
                         break
                     else:
