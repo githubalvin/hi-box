@@ -1,2 +1,4 @@
 # pandorabox
- blabla
+ 1.setup
+
+  pip install aiohttp speedups
