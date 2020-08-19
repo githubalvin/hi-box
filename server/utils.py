@@ -1,18 +1,3 @@
-import time
-
-
-def utctimestamp():
-    """获取当前系统时间"""
-    # utc = time.gmtime(time.time())
-    # t = time.mktime(utc)
-    t = time.time()
-    return int(t)
-
-
-def join_url(*path):
-    """拼接url路径"""
-    return "".join(path)
-
 
 def check_respond(data):
     """返回数据检查"""

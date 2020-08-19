@@ -2,16 +2,15 @@ import asyncio
 import logging
 
 from console import LocalConsole
-from tradecore.machine import Machine
+from tradecore import Machine, TradeController
 
 _LOGGER = logging.getLogger("main")
 
 
 def _boostrap():
-    """启动引导"""
     _LOGGER.info("pandora boostrap...")
 
-    Machine().setup()
+    TradeController().setup()
 
 
 async def main_loop():
@@ -19,8 +18,14 @@ async def main_loop():
     _boostrap()
 
     machine = Machine()
+    control = TradeController()
     
-    print(await machine.kumex.get_public_token())
+    try:
+        print(await control.kumex.get_account_overview())
+    except Exception:
+        raise
+    finally:
+        await control.release()
 
     while True:
         try:
@@ -28,6 +33,8 @@ async def main_loop():
         except Exception:
             pass
         await asyncio.sleep(0.01)
+
+    await control.release()
 
 
 async def main():
