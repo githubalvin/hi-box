@@ -4,8 +4,6 @@ import logging
 from kumex import KuMexExchange
 from utils import Singleton
 
-from .decision.cash_arbitrage import CashArbitrage
-
 _LOGGER = logging.getLogger("control")
 _LOGGER.setLevel(logging.DEBUG)
 
@@ -41,7 +39,9 @@ class TradeController(Singleton):
 
     async def load_all_decision(self):
         """加载所有策略模型"""
-        cash = cash_arbitrage.CashArbitrage()
+        from .decision.cash_arbitrage import CashArbitrage
+
+        cash = CashArbitrage()
         await cash.setup()
         self.decisions.append(cash)
 
