@@ -96,7 +96,7 @@ class KuMexExchange(*mixin):
             kwargs["data"] = data_json
 
         async with self.request.request(method, url, **kwargs) as r:
-            return (await self._check_response_data(r))
+            return (await r.json())
 
     def _get_ws_endpoint(self, ws_detail, private=False):
         if not ws_detail:
