@@ -5,8 +5,6 @@ import hmac
 import time
 import json
 
-import requests
-
 from uuid import uuid1
 from urllib.parse import urljoin
 
@@ -94,9 +92,6 @@ class KuMexExchange(*mixin):
             "headers": headers,
             "timeout": timeout,
         }
-
-        if self.proxy:
-            kwargs["proxies"] = self.proxy
 
         if method not in ['GET', 'DELETE']:
             kwargs["data"] = data_json
