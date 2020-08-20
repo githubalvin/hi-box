@@ -7,15 +7,15 @@ from tradecore import Machine, TradeController
 _LOGGER = logging.getLogger("main")
 
 
-def _boostrap():
+async def _boostrap():
     _LOGGER.info("pandora boostrap...")
 
-    TradeController().setup()
+    await TradeController().setup()
 
 
 async def main_loop():
 
-    _boostrap()
+    await _boostrap()
 
     machine = Machine()
     control = TradeController()

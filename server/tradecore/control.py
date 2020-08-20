@@ -15,7 +15,7 @@ class TradeController(Singleton):
         kumex.setup()
         self.exchanges.append(kumex)
 
-        ret = await kumex.get_ws_token()
+        await kumex.ws_connect(await kumex.get_ws_token())
 
     async def release(self):
         for obj in self.exchanges:
