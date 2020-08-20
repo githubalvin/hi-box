@@ -20,13 +20,12 @@ mixin = [MarketDataRequest, TokenRequest, TradeDataRequest, UserRequest,]
 class KuMexExchange(*mixin):
     """ KuMex Driver
     """
-    def __init__(self, url, key, secret, passphrase, proxy):
+    def __init__(self, url, key, secret, passphrase):
         self.url = url
         self.request = None
         self.api_key = key
         self.api_secret = secret
         self.api_passphrase = passphrase
-        self.proxy = proxy
 
     @staticmethod
     async def _check_response_data(response_data):
