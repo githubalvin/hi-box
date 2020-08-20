@@ -5,19 +5,29 @@ import hashlib
 import hmac
 import time
 import json
+import logging
 
 from uuid import uuid1
 from urllib.parse import urljoin
+from const import (PUB_MSG_HELLO,
+                   PUB_MSG_ACK,
+                   PUB_MSG_ERR,
+                   PUB_MSG_PING,
+                   PUB_MSG_PONG,
+                   PUB_MSG_SUB,
+                   PUB_MSG_UNSUB)
 
 from .request.market_data import MarketDataRequest
-from .request.token import TokenRequest
 from .request.trade import TradeDataRequest
 from .request.user import UserRequest
 from .request.websock import WebsocketRequest
 
 
-mixin = [MarketDataRequest, TokenRequest, TradeDataRequest,
+mixin = [MarketDataRequest, TradeDataRequest,
          UserRequest, WebsocketRequest]
+
+_LOGGER = logging.getLogger("kumex")
+_LOGGER.setLevel(logging.DEBUG)
 
 
 class KuMexExchange(*mixin):
@@ -32,6 +42,7 @@ class KuMexExchange(*mixin):
         self.private = private
         self.websocket = None
         self.publish_handler = {}
+        self.idtotopic = {}
 
     @staticmethod
     async def _check_response_data(response_data):
@@ -107,25 +118,41 @@ class KuMexExchange(*mixin):
         async with self.request.request(method, url, **kwargs) as r:
             return (await self._check_response_data(r))
 
-    async def _connect(self, url, ping_timeout, encryt, max_reconnect, retry_interval, waiter):
+    def _check_publish_data(self, msg_data):
+        msg_type = msg_data.get('type', None)
+        msg_topic = None
+        if msg_type == PUB_MSG_HELLO:
+            pass
+        elif msg_type == PUB_MSG_ACK:
+            msg_id = msg_data["id"]
+            msg_topic = self.idtotopic.pop(msg_id, None)
+        elif msg_type == PUB_MSG_PONG:
+            pass
+        elif msg_type == PUB_MSG_ERR:
+            _LOGGER.error(msg_data['data'])
+            pass
+        elif msg_type is not None:
+            msg_topic = msg_data["topic"]
+        return msg_type, msg_topic, msg_data
+
+
+    async def _connect(self, url, encryt, max_reconnect, retry_interval, waiter):
         assert self.websocket is None, "websocket already exists!"
 
         _reconnect = max_reconnect
 
-        def _awake_waiter():
+        def _awake_waiter(waiter):
             if waiter and not waiter.done():
                 waiter.set_result(None)
                 waiter = None
 
         while True:
             if _reconnect < 0:
-                _awake_waiter()
+                _awake_waiter(waiter)
                 break
 
             async with self.request.ws_connect(url, ssl=encryt) as ws:
-                _awake_waiter()
                 self.websocket = ws
-                _last_ping = time.time()
 
                 async for msg in ws:
                     msg_data = None
@@ -139,20 +166,14 @@ class KuMexExchange(*mixin):
                     elif msg.type == aiohttp.WSMsgType.CLOSE:
                         break
 
-                    if msg_data:
-                        topic = msg_data["topic"]
-                        if topic in self.publish_handler:
-                            try:
-                                await self.publish_handler[topic](msg_data)
-                            except Exception:
-                                pass
-
-                    now = time.time()
-                    interval = now - _last_ping
-                    _last_ping = now
-
-                    if interval > ping_timeout:
-                        await self.keepalive()
+                    msg_type, topic, data = self._check_publish_data(msg_data)
+                    if msg_type == PUB_MSG_HELLO:
+                        _awake_waiter(waiter)
+                    elif topic and topic in self.publish_handler:
+                        try:
+                            self.publish_handler[topic](msg_type, data)
+                        except Exception:
+                            pass
         
             # reset websocket and try reconnect
             self.websocket = None
@@ -165,14 +186,59 @@ class KuMexExchange(*mixin):
         loop = asyncio.get_event_loop()
         waiter = loop.create_future()
         asyncio.ensure_future(
-            self._connect(url, ping_timeout, encryt, max_reconnect, retry_interval, waiter))
+            self._connect(url, encryt, max_reconnect, retry_interval, waiter))
         await waiter
+        asyncio.ensure_future(self.heartbeat(ping_timeout))
 
-    async def keepalive(self):
+    async def _keepalive(self):
         msg = {
             'id': str(int(time.time() * 1000)),
-            'type': 'ping'
+            'type': PUB_MSG_PING
         }
+        await self.websocket.send_json(msg)
+
+    async def heartbeat(self, interval):
+        while True:
+            if self.websocket:
+                await self._keepalive()
+            await asyncio.sleep(interval)
+
+    async def subscribe(self, topic, handle):
+        """ Websocket subscibe
+
+        Args:
+            topic: subscribe what
+            handle: publish callback
+        """
+        id = str(int(time.time() * 1000))
+        msg = {
+            'id': id,
+            'type': PUB_MSG_SUB,
+            'topic': topic,
+            'privateChannel': self.private,
+            'response': True
+        }
+        self.idtotopic[id] = topic
+        self.publish_handler[topic] = handle
+        await self.websocket.send_json(msg)
+
+    async def unsubscribe(self, topic):
+        """ Websocket unsubscibe
+
+        Args:
+            topic: unsubscribe what
+        """
+        id = str(int(time.time() * 1000))
+        msg = {
+            'id': id,
+            'type': PUB_MSG_UNSUB,
+            'topic': topic,
+            'privateChannel': self.private,
+            'response': True
+        }
+        self.idtotopic[id] = topic
+        if topic in self.publish_handler:
+            del self.publish_handler[topic]
         await self.websocket.send_json(msg)
 
 

@@ -3,7 +3,6 @@ import asyncio
 import asyncio.tasks
 import logging
 
-from tradecore.machine import Machine
 
 _LOGGER = logging.getLogger("console")
 
@@ -19,13 +18,6 @@ class Console:
         inpt = inpt.split(" ")
         cmd = inpt[0]
         args = inpt[1:]
-
-        kumex = Machine().kumex
-        func = getattr(kumex, cmd, None)
-        if not func:
-            _LOGGER.error("invalid cmd")
-            return
-        asyncio.ensure_future(func(*args))
 
     async def loop(self):
         while True:

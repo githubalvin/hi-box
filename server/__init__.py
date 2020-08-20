@@ -2,9 +2,10 @@ import asyncio
 import logging
 
 from console import LocalConsole
-from tradecore import Machine, TradeController
+from tradecore import TradeController
 
 _LOGGER = logging.getLogger("main")
+_LOGGER.setLevel(logging.DEBUG)
 
 
 async def _boostrap():
@@ -17,14 +18,10 @@ async def main_loop():
 
     await _boostrap()
 
-    machine = Machine()
     control = TradeController()
 
     while True:
-        try:
-            await machine.analysis()
-        except Exception:
-            pass
+        control.analysis()
         await asyncio.sleep(0.01)
 
     await control.release()
