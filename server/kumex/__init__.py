@@ -32,17 +32,16 @@ class KuMexExchange(*mixin):
         if response_data.status == 200:
             try:
                 data = await response_data.json()
-            except ValueError:
-                raise
-            else:
-                if data and data.get('code'):
-                    if data.get('code') == '200000':
-                        if data.get('data'):
-                            return data['data']
-                        else:
-                            return data
+            except aiohttp.ContentTypeError:
+                data = await response_data.text()
+            if data and 'code' in data:
+                if data.get('code') == '200000':
+                    if data.get('data'):
+                        return data['data']
                     else:
-                        raise Exception("{}-{}".format(response_data.status, await response_data.text()))
+                        return data
+                else:
+                    raise Exception("{}-{}".format(response_data.status, await response_data.text()))
         else:
             raise Exception("{}-{}".format(response_data.status, await response_data.text()))
 
@@ -57,6 +56,7 @@ class KuMexExchange(*mixin):
     async def _request(self, method, uri, timeout=30, auth=True, params=None) -> dict:
         uri_path = uri
         data_json = ''
+
         if method in ['GET', 'DELETE']:
             if params:
                 strl = []
@@ -68,7 +68,6 @@ class KuMexExchange(*mixin):
         else:
             if params:
                 data_json= json.dumps(params)
-
                 uri_path = uri + data_json
 
         headers = {}
@@ -78,47 +77,25 @@ class KuMexExchange(*mixin):
             sign = base64.b64encode(
                 hmac.new(self.api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
             headers = {
-                "KC-API-SIGN": sign.decode("utf-8"),
+                "KC-API-SIGN": sign.decode('utf-8'),
                 "KC-API-TIMESTAMP": str(now_time),
                 "KC-API-KEY": self.api_key,
                 "KC-API-PASSPHRASE": self.api_passphrase,
                 "Content-Type": "application/json"
             }
-            print(headers, sign)
+
         url = urljoin(self.url, uri)
 
         kwargs = {
-            "headers": headers,
             "timeout": timeout,
-        }
+            "headers": headers,
+            }
 
         if method not in ['GET', 'DELETE']:
             kwargs["data"] = data_json
 
         async with self.request.request(method, url, **kwargs) as r:
-            return (await r.json())
-
-    def _get_ws_endpoint(self, ws_detail, private=False):
-        if not ws_detail:
-            raise Exception("Websocket details Error")
-        ws_connect_id = str(int(time.time() * 1000))
-        token = ws_detail['token']
-        endpoint = ws_detail['instanceServers'][0]['endpoint']
-        ws_endpoint = f"{endpoint}?token={token}&connectId={ws_connect_id}"
-        if private:
-            ws_endpoint += '&acceptUserMessage=true'
-        return ws_endpoint
-
-    def _get_ws_encryption(self, ws_detail):
-        if not ws_detail:
-            raise Exception("Websocket details Error")
-        return ws_detail['instanceServers'][0]['encrypt']
-
-    def _get_ws_pingtimeout(self, ws_detail):
-        if not ws_detail:
-            raise Exception("Websocket details Error")
-        _timeout = int(ws_detail['instanceServers'][0]['pingTimeout'] / 1000) - 2
-        return _timeout
+            return (await self._check_response_data(r))
 
     async def subscribe(self, url):
         """Subscribe
@@ -139,3 +116,4 @@ class KuMexExchange(*mixin):
                         await ws.send_str(msg.data + '/answer')
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     break
+                elif msg,type == aiohttp.WSMsgType.close

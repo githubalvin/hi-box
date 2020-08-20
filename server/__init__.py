@@ -19,13 +19,6 @@ async def main_loop():
 
     machine = Machine()
     control = TradeController()
-    
-    try:
-        print(await control.kumex.get_account_overview())
-    except Exception:
-        raise
-    finally:
-        await control.release()
 
     while True:
         try:
