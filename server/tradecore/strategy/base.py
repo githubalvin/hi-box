@@ -1,9 +1,7 @@
 import asyncio
 
-from exchange import SubscriberAbstract
 
-
-class StrategyBase(SubscriberAbstract):
+class StrategyBase:
     """"策略模型"""
 
     PENDING = 1

@@ -9,7 +9,7 @@ import logging
 from uuid import uuid1
 from urllib.parse import urljoin
 
-from exchange import ExchangeAbstract
+from driver.exchange import ExchangeAbstract
 
 from .const import (PUB_MSG_HELLO,
                     PUB_MSG_ACK,
@@ -110,8 +110,8 @@ class KuMexExchange(ExchangeAbstract, *mixin):
         except Exception:
             return None, None, None
 
-        msg_type = msg_data.get('type', None)
-        msg_topic = msg_content = None
+        msg_type = msg_content.get('type', None)
+        msg_topic = None
         if msg_type == PUB_MSG_HELLO:
             pass
         elif msg_type == PUB_MSG_ACK:

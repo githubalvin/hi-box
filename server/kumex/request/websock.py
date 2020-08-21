@@ -27,10 +27,10 @@ class WebsocketRequest:
 
         return ws_endpoint, ws_encrypt, ws_timeout
 
-    async def sub_market_tiker(self, subscriber, symbol):
+    async def sub_market_tiker(self, symbol, cb):
         """交易实时行情 ticker
 
         https://docs.kucoin.io/futures/cn/#ticker
         """
         topic = "/contractMarket/ticker:{symbol}".format(symbol=symbol)
-        return await self.subscribe(subscriber, topic)
+        return await self.subscribe(topic, cb)

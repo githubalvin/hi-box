@@ -67,33 +67,20 @@ class SpotContract(StrategyBase):
         self.market_tiker_handle = await kumex.sub_market_tiker(
             'XBTUSDM', self.market_tiker)
 
+        _LOGGER.debug("overview btc: %s", await kumex.get_account_overview('XBT'))
+        _LOGGER.debug("overview usdt: %s", await kumex.get_account_overview('USDT'))
+
     def market_tiker(self, msg_type, data):
         """交易市场实时行情"""
         if msg_type == PUB_MSG_ACK:
             _LOGGER.info("subscribe market ticket suc")
             return
-
-        symbol =  data["symbol"]
-        sequece = data["sequence"]
-        side = data["side"]
-        price = data["price"]
-        size = data["size"]
-        traceid = data["tradeId"]
-        bestbidsize = data["bestBidSize"]
-        bestbidprice = data["bestBidPrice"]
-        bestaskprice = data["bestAskPrice"]
-        bestasksize = data["bestAskSize"]
-        time = data["time"]
-        print(data)
+        _LOGGER.debug("market tiker: %s", data)
 
     async def analysis(self):
         """分析市场实时行情"""
         _LOGGER.debug("analysis...")
         kumex = TradeController().kumex
-        btc = await kumex.get_account_overview('XBT')
-        _LOGGER.debug("btc overview: %s", btc)
-        usdt = await kumex.get_account_overview('USDT')
-        _LOGGER.debug("usdt overview: %s", usdt)
 
         price = await kumex.get_current_mark_price('XBTUSDM')
         mark_price = price["value"]

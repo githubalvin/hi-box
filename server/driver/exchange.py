@@ -1,5 +1,9 @@
 import aiohttp
 import asyncio
+import logging
+
+_LOGGER = logging.getLogger("driver")
+_LOGGER.setLevel(logging.DEBUG)
 
 
 class SubscribeHandle:
@@ -45,9 +49,11 @@ class ExchangeAbstract:
 
         while True:
             if _reconnect < 0:
+                _LOGGER.error("websocket connect timeout")
                 _awake_waiter(waiter)
                 break
 
+            _LOGGER.info("websocket connecting...")
             async with self.request.ws_connect(url, ssl=encryt) as ws:
                 _awake_waiter(waiter)
                 self.websocket = ws
@@ -59,22 +65,26 @@ class ExchangeAbstract:
                         if topic and topic in self.publish_handler:
                             for handle, cb in self.publish_handler[topic][:]:
                                 if handle.cancle:
+                                    self.publish_handler[topic].remove((handle, cb))
                                     continue
-                                self.publish_handler[topic].remove((handle, cb))
                                 try:
                                     cb(msg_type, content)
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    _LOGGER.error("topic %s recv failed: %s: %s", topic, type(e), e)
+
                             # do unsubscrib when no subscriber
                             if not self.publish_handler[topic]:
                                 try:
                                     await self._unsub_request(topic)
-                                except Exception:
+                                except Exception as e:
+                                    _LOGGER.error("unsubscribe %s failed: %s", topic, e)
                                     continue
                                 del self.publish_handler[topic]
                     elif msg.type == aiohttp.WSMsgType.ERROR:
+                        _LOGGER.error("websocket error occur: %s", msg.data)
                         break
                     elif msg.type == aiohttp.WSMsgType.CLOSE:
+                        _LOGGER.error("websocket closed")
                         break
         
             # reset websocket and try reconnect
