@@ -12,7 +12,7 @@ class TradeController(Singleton):
 
     def __init__(self):
         self.exchanges = []
-        self.decisions = []
+        self.strategies = []
 
     @property
     def kumex(self):
@@ -30,30 +30,30 @@ class TradeController(Singleton):
         await kumex.sub_market_tiker('XBTUSDM', self.market_ticker)
         _LOGGER.debug("kumex setup suc")
 
-        await self.load_all_decision()
-        _LOGGER.debug("decision load suc")
+        await self.load_all_strategies()
+        _LOGGER.debug("strategies load suc")
 
     async def release(self):
         for obj in self.exchanges:
             await obj.release()
 
-    async def load_all_decision(self):
+    async def load_all_strategies(self):
         """加载所有策略模型"""
-        from .decision.cash_arbitrage import CashArbitrage
+        from .strategy.cash_arbitrage import CashArbitrage
 
-        cash = CashArbitrage()
-        await cash.setup()
-        self.decisions.append(cash)
+        ca = CashArbitrage()
+        await ca.setup()
+        self.strategies.append(ca)
 
-    async def shut_decision(self, model):
+    async def shut_strategies(self, model):
         """关闭策略模型"""
 
-    def analysis(self):
+    def execute(self):
         """并发分析决策模型"""
-        for dec in self.decisions:
+        for dec in self.strategies:
             if dec.state == dec.PENDING:
                 continue
-            asyncio.ensure_future(dec.analysis())
+            asyncio.ensure_future(dec.execute())
 
     def market_ticker(self, msg_type, data):
         """交易市场实时行情"""

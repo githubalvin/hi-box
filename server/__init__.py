@@ -23,8 +23,8 @@ async def main_loop():
     control = TradeController()
 
     while True:
-        control.analysis()
-        await asyncio.sleep(0.01)
+        control.execute()
+        await asyncio.sleep(0.1)
 
     await control.release()
 

@@ -51,10 +51,10 @@
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 """
 from .. import TradeController
-from .base import DecisionBase
+from .base import StrategyBase
 
 
-class CashArbitrage(DecisionBase):
+class CashArbitrage(StrategyBase):
 
     async def setup(self):
         """初始化"""
