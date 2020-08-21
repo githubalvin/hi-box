@@ -55,16 +55,16 @@ import logging
 from .. import TradeController
 from .base import StrategyBase
 
-_LOGGER = logging.getLogger("ca")
+_LOGGER = logging.getLogger("SC")
 
 
-class CashArbitrage(StrategyBase):
+class SpotContract(StrategyBase):
 
     async def setup(self):
         """初始化"""
 
     async def analysis(self):
-        """分析"""
+        """分析市场实时行情"""
         _LOGGER.debug("analysis...")
         kumex = TradeController().kumex
         btc = await kumex.get_account_overview('XBT')

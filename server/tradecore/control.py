@@ -39,11 +39,11 @@ class TradeController(Singleton):
 
     async def load_all_strategies(self):
         """加载所有策略模型"""
-        from .strategy.cash_arbitrage import CashArbitrage
+        from .strategy.spot_contract import SpotContract
 
-        ca = CashArbitrage()
-        await ca.setup()
-        self.strategies.append(ca)
+        sc = SpotContract()
+        await sc.setup()
+        self.strategies.append(sc)
 
     async def shut_strategies(self, model):
         """关闭策略模型"""
