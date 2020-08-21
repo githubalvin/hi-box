@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-from console import LocalConsole
 from tradecore import TradeController
 
 _LOGGER = logging.getLogger("main")
@@ -16,7 +15,7 @@ async def _boostrap():
     await TradeController().setup()
 
 
-async def main_loop():
+async def main():
 
     await _boostrap()
 
@@ -27,15 +26,6 @@ async def main_loop():
         await asyncio.sleep(0.1)
 
     await control.release()
-
-
-async def main():
-    console = LocalConsole()
-
-    await asyncio.gather(
-        main_loop(),
-        console.loop(),
-    )
 
 
 if __name__ == '__main__':
