@@ -51,6 +51,8 @@ class TradeController(Singleton):
     def analysis(self):
         """并发分析决策模型"""
         for dec in self.decisions:
+            if dec.state == dec.PENDING:
+                continue
             asyncio.ensure_future(dec.analysis())
 
     def market_ticker(self, msg_type, data):

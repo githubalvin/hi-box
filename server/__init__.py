@@ -11,6 +11,8 @@ _LOGGER.setLevel(logging.DEBUG)
 async def _boostrap():
     _LOGGER.info("pandora boostrap...")
 
+    logging.basicConfig(level=logging.DEBUG)
+
     await TradeController().setup()
 
 

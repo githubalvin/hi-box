@@ -182,7 +182,18 @@ class KuMexExchange(*mixin):
 
     async def ws_connect(self, url:str, encryt:bool, ping_timeout:int,
                    max_reconnect=10, retry_interval=5):
-        """Websocket connect"""
+        """Websocket connect
+        
+        Corutine will be blocked until websocket connected or try max_reconnect.
+        Heartbeat keeps the whole life-cycle.
+
+        Args:
+            url:
+            encryt:
+            ping_timeout: heartbeat interval
+            max_reconnect: reconnect cnt limit
+            retry_interval:
+        """
         loop = asyncio.get_event_loop()
         waiter = loop.create_future()
         asyncio.ensure_future(
@@ -207,8 +218,11 @@ class KuMexExchange(*mixin):
         """ Websocket subscibe
 
         Args:
-            topic: subscribe what
+            topic: subscribe channel
             handle: publish callback
+
+        Raises:
+            ConnectionResetError: connect lost
         """
         id = str(int(time.time() * 1000))
         msg = {
@@ -226,7 +240,10 @@ class KuMexExchange(*mixin):
         """ Websocket unsubscibe
 
         Args:
-            topic: unsubscribe what
+            topic: unsubscribe channel
+
+        Raises:
+            ConnectionResetError: connect lost
         """
         id = str(int(time.time() * 1000))
         msg = {
