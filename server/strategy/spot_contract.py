@@ -50,11 +50,9 @@
 来源：简书
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 """
-import asyncio
 import logging
 
 from kumex.const import PUB_MSG_ACK
-from .. import TradeController
 from .base import StrategyBase
 
 _LOGGER = logging.getLogger("SC")
@@ -62,13 +60,16 @@ _LOGGER = logging.getLogger("SC")
 
 class SpotContract(StrategyBase):
 
-    async def setup(self):
-        kumex = TradeController().kumex
-        self.market_tiker_handle = await kumex.sub_market_tiker(
+    @property
+    def kumex(self):
+        return self.exchanges[0]
+
+    async def init(self):
+        self.market_tiker_handle = await self.kumex.sub_market_tiker(
             'XBTUSDM', self.market_tiker)
 
-        _LOGGER.debug("overview btc: %s", await kumex.get_account_overview('XBT'))
-        _LOGGER.debug("overview usdt: %s", await kumex.get_account_overview('USDT'))
+        _LOGGER.debug("overview btc: %s", await self.kumex.get_account_overview('XBT'))
+        _LOGGER.debug("overview usdt: %s", await self.kumex.get_account_overview('USDT'))
 
     def market_tiker(self, msg_type, data):
         """交易市场实时行情"""
@@ -80,9 +81,7 @@ class SpotContract(StrategyBase):
     async def analysis(self):
         """分析市场实时行情"""
         _LOGGER.debug("analysis...")
-        kumex = TradeController().kumex
-
-        price = await kumex.get_current_mark_price('XBTUSDM')
+        price = await self.kumex.get_current_mark_price('XBTUSDM')
         mark_price = price["value"]
         index_price = price["indexPrice"]
         _LOGGER.debug("btc current mark price: %s", mark_price)

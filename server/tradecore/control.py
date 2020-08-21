@@ -1,7 +1,8 @@
 import asyncio
 import logging
+import json
 
-from kumex import KuMexExchange
+from const import SPOT_CONTRACT
 from utils import Singleton
 
 _LOGGER = logging.getLogger("control")
@@ -11,41 +12,35 @@ _LOGGER.setLevel(logging.DEBUG)
 class TradeController(Singleton):
 
     def __init__(self):
-        self.exchanges = []
         self.strategies = []
 
-    @property
-    def kumex(self):
-        return self.exchanges[0]
-
     async def setup(self):
-        kumex = KuMexExchange('https://api-sandbox-futures.kucoin.com',
-                              '5f3cf2295b13f000064986a6',
-                              '8436b3ec-892b-4f2f-ae65-4a4fa3768cac',
-                              '1234567')
-        kumex.setup()
-        self.exchanges.append(kumex)
+        config = {}
+        with open("config.json", 'r') as f:
+            config = json.loads(f.read())
 
-        await kumex.ws_connect(*await kumex.get_ws_token())
-        _LOGGER.debug("kumex setup suc")
+        for detail in config["strategy"]:
+            name = detail['name']
 
-        await self.load_all_strategies()
+            if name == SPOT_CONTRACT:
+                from strategy.spot_contract import SpotContract
+                sc = SpotContract()
+                await sc.setup(detail['exchange'])
+                await sc.init()
+                self.strategies.append(sc)
+
         _LOGGER.debug("strategies load suc")
 
     async def release(self):
-        for obj in self.exchanges:
-            await obj.release()
+        await self.shut_strategies()
 
-    async def load_all_strategies(self):
-        """加载所有策略模型"""
-        from .strategy.spot_contract import SpotContract
-
-        sc = SpotContract()
-        await sc.setup()
-        self.strategies.append(sc)
-
-    async def shut_strategies(self, model):
-        """关闭策略模型"""
+    async def shut_strategies(self):
+        """关闭策略"""
+        for dec in self.strategies:
+            if dec.state == dec.CLOSE:
+                continue
+            await dec.close()
+        self.strategies= []
 
     def execute(self):
         """并发分析决策模型"""

@@ -1,0 +1,16 @@
+{
+    "strategy": [
+        {
+            "name": "spot_contract",
+            "exchange": [
+                {
+                    "name": "KuMex",
+                    "url": "https://api-sandbox-futures.kucoin.com",
+                    "key": "5f3cf2295b13f000064986a6",
+                    "secret": "8436b3ec-892b-4f2f-ae65-4a4fa3768cac",
+                    "passphrase": "1234567"
+                }
+            ]
+        }
+    ]
+}
