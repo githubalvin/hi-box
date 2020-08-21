@@ -1,6 +1,5 @@
 import asyncio
 
-
 class StrategyBase:
     """"策略模型"""
 

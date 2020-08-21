@@ -50,8 +50,12 @@
 来源：简书
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 """
+import logging
+
 from .. import TradeController
 from .base import StrategyBase
+
+_LOGGER = logging.getLogger("ca")
 
 
 class CashArbitrage(StrategyBase):
@@ -61,18 +65,18 @@ class CashArbitrage(StrategyBase):
 
     async def analysis(self):
         """分析"""
-        print("cash arbitrage analysis...")
+        _LOGGER.debug("analysis...")
         kumex = TradeController().kumex
         btc = await kumex.get_account_overview('XBT')
-        print("btc overview: ", btc)
+        _LOGGER.debug("btc overview: %s", btc)
         usdt = await kumex.get_account_overview('USDT')
-        print("usdt overview: ", usdt)
+        _LOGGER.debug("usdt overview: %s", usdt)
 
         price = await kumex.get_current_mark_price('XBTUSDM')
         mark_price = price["value"]
         index_price = price["indexPrice"]
-        print("btc current mark price: ", mark_price)
-        print("btc current index price: ", index_price)
+        _LOGGER.debug("btc current mark price: %s", mark_price)
+        _LOGGER.debug("btc current index price: %s", index_price)
 
     async def decision(self):
         """决策"""
