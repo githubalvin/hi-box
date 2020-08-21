@@ -1,7 +1,9 @@
 import asyncio
 
+from exchange import SubscriberAbstract
 
-class StrategyBase:
+
+class StrategyBase(SubscriberAbstract):
     """"策略模型"""
 
     PENDING = 1
@@ -12,6 +14,9 @@ class StrategyBase:
 
     async def setup(self):
         """初始化"""
+
+    async def close(self):
+        """关闭策略"""
 
     async def execute(self):
         """执行策略"""
@@ -29,16 +34,12 @@ class StrategyBase:
         """分析"""
         raise NotImplementedError
 
-    async def decision(self):
-        """决策"""
-        raise NotImplementedError
-
     async def handle_exception(self, e):
         """"异常处理
         
         当策略出现异常的情况，可以做一些必要的风险管控措施
         """
-        raise
+        raise e
     
     def snapshot(self):
         """决策快照

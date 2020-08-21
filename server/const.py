@@ -5,11 +5,4 @@ REQUEST_PUT = 'PUT'
 
 EXCHANGE_KUMEX  = 1
 
-PUB_MSG_HELLO = 'welcome'
-PUB_MSG_ACK = 'ack'
-PUB_MSG_ERR = 'error'
-PUB_MSG_PING = 'ping'
-PUB_MSG_PONG = 'pong'
-PUB_MSG_SUB = 'subscribe'
-PUB_MSG_UNSUB = 'unsubscribe'
 

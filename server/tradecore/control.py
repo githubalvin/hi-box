@@ -27,7 +27,6 @@ class TradeController(Singleton):
         self.exchanges.append(kumex)
 
         await kumex.ws_connect(*await kumex.get_ws_token())
-        await kumex.sub_market_tiker('XBTUSDM', self.market_ticker)
         _LOGGER.debug("kumex setup suc")
 
         await self.load_all_strategies()
@@ -54,21 +53,3 @@ class TradeController(Singleton):
             if dec.state == dec.PENDING:
                 continue
             asyncio.ensure_future(dec.execute())
-
-    def market_ticker(self, msg_type, data):
-        """交易市场实时行情"""
-        if msg_type == "ack":
-            _LOGGER.info("subscribe market ticket suc")
-            return
-
-        symbol =  data["symbol"]
-        sequece = data["sequence"]
-        side = data["side"]
-        price = data["price"]
-        size = data["size"]
-        traceid = data["tradeId"]
-        bestbidsize = data["bestBidSize"]
-        bestbidprice = data["bestBidPrice"]
-        bestaskprice = data["bestAskPrice"]
-        bestasksize = data["bestAskSize"]
-        time = data["time"]

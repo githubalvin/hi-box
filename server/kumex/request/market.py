@@ -1,7 +1,7 @@
 # pylint: disable=all
 
 
-class MarketDataRequest:
+class MarketRequest:
 
     async def get_server_timestamp(self):
         """

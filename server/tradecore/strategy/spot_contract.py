@@ -50,8 +50,10 @@
 来源：简书
 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 """
+import asyncio
 import logging
 
+from kumex.const import PUB_MSG_ACK
 from .. import TradeController
 from .base import StrategyBase
 
@@ -61,7 +63,28 @@ _LOGGER = logging.getLogger("SC")
 class SpotContract(StrategyBase):
 
     async def setup(self):
-        """初始化"""
+        kumex = TradeController().kumex
+        self.market_tiker_handle = await kumex.sub_market_tiker(
+            'XBTUSDM', self.market_tiker)
+
+    def market_tiker(self, msg_type, data):
+        """交易市场实时行情"""
+        if msg_type == PUB_MSG_ACK:
+            _LOGGER.info("subscribe market ticket suc")
+            return
+
+        symbol =  data["symbol"]
+        sequece = data["sequence"]
+        side = data["side"]
+        price = data["price"]
+        size = data["size"]
+        traceid = data["tradeId"]
+        bestbidsize = data["bestBidSize"]
+        bestbidprice = data["bestBidPrice"]
+        bestaskprice = data["bestAskPrice"]
+        bestasksize = data["bestAskSize"]
+        time = data["time"]
+        print(data)
 
     async def analysis(self):
         """分析市场实时行情"""
@@ -77,6 +100,3 @@ class SpotContract(StrategyBase):
         index_price = price["indexPrice"]
         _LOGGER.debug("btc current mark price: %s", mark_price)
         _LOGGER.debug("btc current index price: %s", index_price)
-
-    async def decision(self):
-        """决策"""
