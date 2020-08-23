@@ -60,29 +60,46 @@ _LOGGER = logging.getLogger("SC")
 
 class SpotContract(StrategyBase):
 
+    def __init__(self):
+        super(SpotContract, self).__init__()
+        self.cur_index_price = 0
+        self.cur_mark_price = 0
+        self.maker_feerate = 0
+        self.taker_feerate = 0
+
     @property
     def kumex(self):
         return self.exchanges[0]
 
     async def init(self):
-        self.market_tiker_handle = await self.kumex.sub_market_tiker(
-            'XBTUSDM', self.market_tiker)
+        self.instrument_handle = await self.kumex.sub_instrument(
+            'XBTUSDM', self._instrument)
+
+        data = await self.kumex.get_contract_detail('XBTUSDM')
+        self.maker_rate = data["makerFeeRate"]
+        _LOGGER.debug("contract detail: %s", data)
 
         _LOGGER.debug("overview btc: %s", await self.kumex.get_account_overview('XBT'))
         _LOGGER.debug("overview usdt: %s", await self.kumex.get_account_overview('USDT'))
 
-    def market_tiker(self, msg_type, data):
-        """交易市场实时行情"""
-        if msg_type == PUB_MSG_ACK:
-            _LOGGER.info("subscribe market ticket suc")
-            return
-        _LOGGER.debug("market tiker: %s", data)
+    def _instrument(self, msg_type, data):
+        _LOGGER.debug("instrument: %s", data)
+        sub = data["subject"]
+        if sub == "mark.index.price":   # 当前最新价格
+            self.cur_index_price = data["data"]["indexPrice"]
+            self.cur_mark_price = data["data"]["makrPrice"]
+        elif sub == "funding.rate":     # 资金费率
+            pass
 
     async def analysis(self):
         """分析市场实时行情"""
         _LOGGER.debug("analysis...")
-        price = await self.kumex.get_current_mark_price('XBTUSDM')
-        mark_price = price["value"]
-        index_price = price["indexPrice"]
-        _LOGGER.debug("btc current mark price: %s", mark_price)
-        _LOGGER.debug("btc current index price: %s", index_price)
+        basic = self.cur_index_price - self.cur_mark_price
+        if basic >= 0:  # 不做反向套利
+            return
+        ratio = abs(basic) / self.cur_mark_price
+        if ratio <= self.taker_feerate:    # 成本控制
+            return
+        if ratio < 10:                  # 收益控制
+            return        
+        await self.kumex.create_limit_order(self, 'XBTUSDM', 'buy', 100, 1, self.cur_mark_price)

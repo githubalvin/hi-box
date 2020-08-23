@@ -34,3 +34,9 @@ class WebsocketRequest:
         """
         topic = "/contractMarket/ticker:{symbol}".format(symbol=symbol)
         return await self.subscribe(topic, cb)
+
+    async def sub_instrument(self, symbol, cb):
+        """产品行情数据
+        """
+        topic = "/contract/instrument:{symbol}".format(symbol=symbol)
+        return await self.subscribe(topic, cb)
