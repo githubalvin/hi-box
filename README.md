@@ -1,4 +1,7 @@
-# pandorabox
- 1.setup
+# hi-box
+
+A high frequency exchange framework
+
+ dependency:
 
   pip install aiohttp speedups
